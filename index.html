@@ -33,6 +33,7 @@
     const getPiece = (x, y) => getField(x, y).children[0]
     const isBlack = (piece) => piece.classList.contains(COLOR_KEY.b.class)
     const isSameColor = (piece1, piece2) => isBlack(piece1) === isBlack(piece2)
+    const isExistPiece = (field) => field.classList.contains('fill')
 
     let currentColor = 'b'
 
@@ -88,8 +89,9 @@
         return {x: noX, y: noY}
     }
 
-    function hasAnotherVertical(fieldNumber, currentPiece) {
-        for (let y = 0; y < fieldNumber.y; y++) {
+    function hasSameVertical(fieldNumber, currentPiece) {
+        let field = getField(fieldNumber.x, fieldNumber.y)
+        for (let y = fieldNumber.y + 1; isExistPiece(field); y++) {
             const piece = getPiece(fieldNumber.x, y)
             if (!piece) {
                 return false
@@ -101,19 +103,29 @@
         return false
     }
 
+    function turnPiece(piece){
+        console.log(piece)
+        piece.classList.toggle('white-piece')
+        piece.classList.toggle('black-piece')
+    }
+
     function turnVertical(fieldNumber, currentPiece) {
-        const piece = getPiece(fieldNumber.x, y)
-        while (piece && !isSameColor(piece, currentPiece)) {
-            turn()
+        let field = getField(fieldNumber.x, fieldNumber.y)
+        let y = fieldNumber.y + 1
+        let piece = getPiece(fieldNumber.x, y)
+        while (!isSameColor(piece, currentPiece)) {
+            turnPiece(piece)
+            y++
+            piece = getPiece(fieldNumber.x, y)
         }
     }
 
     function turnPieces(fieldNumber, currentPiece) {
-        if (hasAnotherVertical(fieldNumber, currentPiece)) {
-            turnVertical()
+        if (hasSameVertical(fieldNumber, currentPiece)) {
+            turnVertical(fieldNumber, currentPiece)
         }
-        turnHorizontal()
-        turnCross()
+        // turnHorizontal()
+        // turnCross()
     }
 
     BOARD.onclick = (event) => {
@@ -122,14 +134,13 @@
         if (piece) {
             currentColor = currentColor === 'b' ? 'w' : 'b'
         }
-
-        
         turnPieces(fieldNumber, piece)
     }
 
 
     createBoard()
     putInitPiece()
+
 
 
 </script>
