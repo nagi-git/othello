@@ -1,0 +1,43 @@
+#board {
+    white-space: nowrap;
+}
+
+#board .col {
+    margin: 0;
+    padding: 0;
+    display: inline-block;
+    white-space: nowrap;
+}
+
+#board .field {
+    margin: 0;
+    padding: 0;
+    background-color: green;
+    height: 60px;
+    width: 60px;
+    border: solid 1px #000;
+}
+
+#board .field:hover:not(.fill) {
+    background-color: lawngreen;
+}
+
+.black-piece {
+    position: relative;
+    top: 4px;
+    left: 4px;
+    height: 52px;
+    width: 52px;
+    border-radius: 26px;
+    background-color: #000;
+}
+
+.white-piece {
+    position: relative;
+    top: 4px;
+    left: 4px;
+    height: 52px;
+    width: 52px;
+    border-radius: 26px;
+    background-color: #fff;
+}

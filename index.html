@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <title>Othello</title>
+    <meta name="viewport" content="width=device-width,initial-scale=1.0,minimum-scale=1.0">
+    <link rel="stylesheet" href="./style.css">
+</head>
+
+<body>
+    <header>
+    </header>
+    <div class="container">
+        <div id="board"></div>
+    </div>
+</body>
+
+<script type="text/javascript">
+    const BOARD_SIZE = 8
+    const FIELD_LENGTH = 62 // px
+    const BOARD = document.getElementById('board')
+    const COLOR_KEY = {
+        b: {
+            class: 'black-piece'
+        },
+        w: {
+            class: 'white-piece'
+        }
+    }
+
+    const genId = (x, y) => `${x}_${y}`
+    const getField = (x, y) => document.getElementById(genId(x, y))
+    const getPiece = (x, y) => getField(x, y).children[0]
+    const isBlack = (piece) => piece.classList.contains(COLOR_KEY.b.class)
+    const isSameColor = (piece1, piece2) => isBlack(piece1) === isBlack(piece2)
+
+    let currentColor = 'b'
+
+    function createBoard() {
+        for (let x = 0; x < BOARD_SIZE; x++) {
+            const col = document.createElement('div')
+            col.classList.add('col')
+            BOARD.appendChild(col)
+            for (let y = 0; y < BOARD_SIZE; y++) {
+                const field = document.createElement('div')
+                field.id = genId(x, y)
+                field.classList.add('field')
+                col.appendChild(field)
+            }
+        }
+    }
+
+    function putPiece(x, y, colorKey) {
+        const field = getField(x, y)
+        if (field.classList.contains('fill')) return
+
+        const piece = document.createElement('div')
+        piece.classList.add(COLOR_KEY[colorKey].class)
+        field.appendChild(piece)
+
+        field.classList.add('fill')
+        return piece
+    }
+
+    function putInitPiece() {
+        putPiece(3, 3, 'w')
+        putPiece(4, 4, 'w')
+        putPiece(3, 4, 'b')
+        putPiece(4, 3, 'b')
+    }
+
+    function getFieldNumber(clickEvent) {
+        const clickX = clickEvent.pageX
+        const clickY = clickEvent.pageY
+
+        // ボードの位置を取得
+        const clientRect = BOARD.getBoundingClientRect()
+        const positionX = clientRect.left + window.pageXOffset
+        const positionY = clientRect.top + window.pageYOffset
+
+        // ボード内のクリック位置を計算
+        const x = clickX - positionX
+        const y = clickY - positionY
+
+        // 何マス目かを計算
+        const noX = parseInt(x / FIELD_LENGTH)
+        const noY = parseInt(y / FIELD_LENGTH)
+        return {x: noX, y: noY}
+    }
+
+    function hasAnotherVertical(fieldNumber, currentPiece) {
+        for (let y = 0; y < fieldNumber.y; y++) {
+            const piece = getPiece(fieldNumber.x, y)
+            if (!piece) {
+                return false
+            }
+            if (isSameColor(piece, currentPiece)) {
+                return true
+            }
+        }
+        return false
+    }
+
+    function turnVertical(fieldNumber, currentPiece) {
+        const piece = getPiece(fieldNumber.x, y)
+        while (piece && !isSameColor(piece, currentPiece)) {
+            turn()
+        }
+    }
+
+    function turnPieces(fieldNumber, currentPiece) {
+        if (hasAnotherVertical(fieldNumber, currentPiece)) {
+            turnVertical()
+        }
+        turnHorizontal()
+        turnCross()
+    }
+
+    BOARD.onclick = (event) => {
+        const fieldNumber = getFieldNumber(event)
+        const piece = putPiece(fieldNumber.x, fieldNumber.y, currentColor)
+        if (piece) {
+            currentColor = currentColor === 'b' ? 'w' : 'b'
+        }
+
+        
+        turnPieces(fieldNumber, piece)
+    }
+
+
+    createBoard()
+    putInitPiece()
+
+
+</script>
+
+</html>
