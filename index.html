@@ -90,7 +90,7 @@
         return {x: noX, y: noY}
     }
 
-    function hasSameVertical(fieldNumber, getNextFieldNumber) {
+    function hasSameColorPiece(fieldNumber, getNextFieldNumber) {
         let field = getField(fieldNumber)
         let currentPiece = getPiece(fieldNumber)
         for (let targetFieldNumber = getNextFieldNumber(fieldNumber);
@@ -113,7 +113,7 @@
         piece.classList.toggle('black-piece')
     }
 
-    function turnVertical(fieldNumber, getNextFieldNumber) {
+    function turnPiecesOnLine(fieldNumber, getNextFieldNumber) {
         let field = getField(fieldNumber)
         let currentPiece = getPiece(fieldNumber)
         let targetFieldNumber = getNextFieldNumber(fieldNumber)
@@ -125,18 +125,19 @@
         }
     }
 
-    function turnPieces(fieldNumber) {
-        let getNextFieldNumber = fieldNumber => {return {x: fieldNumber.x, y: fieldNumber.y - 1}}
-        if (hasSameVertical(fieldNumber, getNextFieldNumber)) {
-            turnVertical(fieldNumber, getNextFieldNumber)
-        }
-        getNextFieldNumber = fieldNumber => {return {x: fieldNumber.x, y: fieldNumber.y + 1}}
-        if (hasSameVertical(fieldNumber, getNextFieldNumber)) {
-            turnVertical(fieldNumber, getNextFieldNumber)
-        }
+    function genNextFieldNumberGetter(x, y) {
+        return (fieldNumber) => {return {x: fieldNumber.x + x, y: fieldNumber.y + y}}
+    }
 
-        // turnHorizontal()
-        // turnCross()
+    function turnPieces(fieldNumber) {
+        for (let x = -1; x <= 1; x++) {
+            for (let y = -1; y <= 1; y++) {
+                let getNextFieldNumber = genNextFieldNumberGetter(x, y)
+                if (hasSameColorPiece(fieldNumber, getNextFieldNumber)) {
+                    turnPiecesOnLine(fieldNumber, getNextFieldNumber)
+                }
+            }
+        }
     }
 
     BOARD.onclick = (event) => {
