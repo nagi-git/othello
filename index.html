@@ -29,8 +29,9 @@
     }
 
     const genId = (x, y) => `${x}_${y}`
-    const getField = (x, y) => document.getElementById(genId(x, y))
-    const getPiece = (x, y) => getField(x, y).children[0]
+    const getField = (fieldNumber) =>
+        document.getElementById(genId(fieldNumber.x, fieldNumber.y))
+    const getPiece = (fieldNumber) => getField(fieldNumber)?.children[0]
     const isBlack = (piece) => piece.classList.contains(COLOR_KEY.b.class)
     const isSameColor = (piece1, piece2) => isBlack(piece1) === isBlack(piece2)
     const isExistPiece = (field) => field.classList.contains('fill')
@@ -51,8 +52,8 @@
         }
     }
 
-    function putPiece(x, y, colorKey) {
-        const field = getField(x, y)
+    function putPiece(fieldNumber, colorKey) {
+        const field = getField(fieldNumber)
         if (field.classList.contains('fill')) return
 
         const piece = document.createElement('div')
@@ -64,10 +65,10 @@
     }
 
     function putInitPiece() {
-        putPiece(3, 3, 'w')
-        putPiece(4, 4, 'w')
-        putPiece(3, 4, 'b')
-        putPiece(4, 3, 'b')
+        putPiece({x: 3, y: 3}, 'w')
+        putPiece({x: 4, y: 4}, 'w')
+        putPiece({x: 3, y: 4}, 'b')
+        putPiece({x: 4, y: 3}, 'b')
     }
 
     function getFieldNumber(clickEvent) {
@@ -89,14 +90,17 @@
         return {x: noX, y: noY}
     }
 
-    function hasSameVertical(fieldNumber, currentPiece) {
-        let field = getField(fieldNumber.x, fieldNumber.y)
-        for (let y = fieldNumber.y + 1; isExistPiece(field); y++) {
-            const piece = getPiece(fieldNumber.x, y)
-            if (!piece) {
+    function hasSameVertical(fieldNumber, getNextFieldNumber) {
+        let field = getField(fieldNumber)
+        let currentPiece = getPiece(fieldNumber)
+        for (let targetFieldNumber = getNextFieldNumber(fieldNumber);
+            isExistPiece(field);
+            targetFieldNumber = getNextFieldNumber(targetFieldNumber)) {
+            const targetPiece = getPiece(targetFieldNumber)
+            if (!targetPiece) {
                 return false
             }
-            if (isSameColor(piece, currentPiece)) {
+            if (isSameColor(targetPiece, currentPiece)) {
                 return true
             }
         }
@@ -109,32 +113,39 @@
         piece.classList.toggle('black-piece')
     }
 
-    function turnVertical(fieldNumber, currentPiece) {
-        let field = getField(fieldNumber.x, fieldNumber.y)
-        let y = fieldNumber.y + 1
-        let piece = getPiece(fieldNumber.x, y)
-        while (!isSameColor(piece, currentPiece)) {
-            turnPiece(piece)
-            y++
-            piece = getPiece(fieldNumber.x, y)
+    function turnVertical(fieldNumber, getNextFieldNumber) {
+        let field = getField(fieldNumber)
+        let currentPiece = getPiece(fieldNumber)
+        let targetFieldNumber = getNextFieldNumber(fieldNumber)
+        let targetPiece = getPiece(targetFieldNumber)
+        while (!isSameColor(targetPiece, currentPiece)) {
+            turnPiece(targetPiece)
+            targetFieldNumber = getNextFieldNumber(targetFieldNumber)
+            targetPiece = getPiece(targetFieldNumber)
         }
     }
 
-    function turnPieces(fieldNumber, currentPiece) {
-        if (hasSameVertical(fieldNumber, currentPiece)) {
-            turnVertical(fieldNumber, currentPiece)
+    function turnPieces(fieldNumber) {
+        let getNextFieldNumber = fieldNumber => {return {x: fieldNumber.x, y: fieldNumber.y - 1}}
+        if (hasSameVertical(fieldNumber, getNextFieldNumber)) {
+            turnVertical(fieldNumber, getNextFieldNumber)
         }
+        getNextFieldNumber = fieldNumber => {return {x: fieldNumber.x, y: fieldNumber.y + 1}}
+        if (hasSameVertical(fieldNumber, getNextFieldNumber)) {
+            turnVertical(fieldNumber, getNextFieldNumber)
+        }
+
         // turnHorizontal()
         // turnCross()
     }
 
     BOARD.onclick = (event) => {
         const fieldNumber = getFieldNumber(event)
-        const piece = putPiece(fieldNumber.x, fieldNumber.y, currentColor)
+        const piece = putPiece(fieldNumber, currentColor)
         if (piece) {
             currentColor = currentColor === 'b' ? 'w' : 'b'
         }
-        turnPieces(fieldNumber, piece)
+        turnPieces(fieldNumber)
     }
 
 
