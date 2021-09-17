@@ -34,7 +34,7 @@
     const getPiece = (fieldNumber) => getField(fieldNumber)?.children[0]
     const isBlack = (piece) => piece.classList.contains(COLOR_KEY.b.class)
     const isSameColor = (piece1, piece2) => isBlack(piece1) === isBlack(piece2)
-    const isExistPiece = (field) => field.classList.contains('fill')
+    const isExistPiece = (fieldNumber) => getField(fieldNumber)?.classList.contains('fill')
 
     let currentColor = 'b'
 
@@ -91,10 +91,9 @@
     }
 
     function hasSameColorPiece(fieldNumber, getNextFieldNumber) {
-        let field = getField(fieldNumber)
         let currentPiece = getPiece(fieldNumber)
         for (let targetFieldNumber = getNextFieldNumber(fieldNumber);
-            isExistPiece(field);
+            isExistPiece(targetFieldNumber);
             targetFieldNumber = getNextFieldNumber(targetFieldNumber)) {
             const targetPiece = getPiece(targetFieldNumber)
             if (!targetPiece) {
@@ -108,13 +107,11 @@
     }
 
     function turnPiece(piece){
-        console.log(piece)
         piece.classList.toggle('white-piece')
         piece.classList.toggle('black-piece')
     }
 
     function turnPiecesOnLine(fieldNumber, getNextFieldNumber) {
-        let field = getField(fieldNumber)
         let currentPiece = getPiece(fieldNumber)
         let targetFieldNumber = getNextFieldNumber(fieldNumber)
         let targetPiece = getPiece(targetFieldNumber)
@@ -145,8 +142,8 @@
         const piece = putPiece(fieldNumber, currentColor)
         if (piece) {
             currentColor = currentColor === 'b' ? 'w' : 'b'
+            turnPieces(fieldNumber)
         }
-        turnPieces(fieldNumber)
     }
 
 
