@@ -8,11 +8,15 @@
 </head>
 
 <body>
-    <header>
-    </header>
     <div class="container">
+        <div id="current-info">
+            <span id="current-player"></span>
+            <div id="count-viewer">
+                <span id="black-count" class="piece-count"></span>
+                <span id="white-count" class="piece-count"></span>
+            </div>
+        </div>
         <div id="board"></div>
-        <div id="current-player"></div>
     </div>
 </body>
 
@@ -23,22 +27,24 @@
     const COLOR_KEY = {
         b: {
             class: 'black-piece',
-            text: '黒'
+            text: '黒',
+            count: 'black-count'
+
         },
         w: {
             class: 'white-piece',
-            text: '黒'
+            text: '白',
+            count: 'white-count'
         }
     }
 
     const genId = (x, y) => `${x}_${y}`
     const getField = (fieldNumber) =>
         document.getElementById(genId(fieldNumber.x, fieldNumber.y))
-    const getPiece = (fieldNumber) => getField(fieldNumber)?.children[0]
+    const getPiece = (fieldNumber) => getField(fieldNumber)?.firstElementChild
     const isBlack = (piece) => piece.classList.contains(COLOR_KEY.b.class)
     const isSameColor = (piece, color) => !isBlack(piece) ^ color === 'b'
-    const isExistPiece = (fieldNumber) => getField(fieldNumber)?.classList.contains('fill')
-    const isAblePut = (targetField) => targetField.classList.contains('able-put')
+    const isAblePut = (fieldNumber) => getField(fieldNumber).classList.contains('able-put')
 
     let currentColor = 'b'
 
@@ -54,12 +60,13 @@
                 col.appendChild(field)
             }
         }
+        putInitPiece()
+        addAblePut()
+        viewInfo()
     }
 
     function putPiece(fieldNumber, colorKey) {
-        // REVIEW: ↓の指摘を踏まえると、ここではgetPiece()で駒の有無判定を行えば良いのでは？
-        // そうすると、isExistPiece()は削除できる気がする。
-        if (isExistPiece(fieldNumber)) return
+        if (getPiece(fieldNumber)) return
         
         const field = getField(fieldNumber)
         const piece = document.createElement('div')
@@ -96,33 +103,14 @@
         return {x: noX, y: noY}
     }
 
-    function hasTurnablePiece(color /** REVIEW: 何の色かが想像できる変数名に直そう */, getNextFieldNumber) {
-        /**
-         * REVIEW: getNextFieldNumber() は必ず getPiece(targetFieldNumber) とセットで呼び出す必要がある。
-         * なので、getNextFieldNumber()（fieldNumberを取得する）のではなく、
-         * getNextPiece()（pieceを取得する）に変更した方が良さそう。
-         */
-        let targetFieldNumber = getNextFieldNumber()
-        // REVIEW: 存在有無をチェックしてからじゃないとtargetPieceは取れないの？
-        // 有ったら取る、無かったらundefinedを得る　ではダメか？
-        if (!isExistPiece(targetFieldNumber)) {
-            return false
-        }
-        let targetPiece = getPiece(targetFieldNumber)
-        if (!targetPiece || isSameColor(targetPiece, color)) {
+    function hasTurnablePiece(currentColor, getNextPiece) {
+        let targetPiece = getNextPiece()
+        if (!targetPiece || isSameColor(targetPiece, currentColor)) {
             return false
         }
 
-        for (targetFieldNumber = getNextFieldNumber();
-            // REVIEW: ここも、存在有無をチェックしてからじゃないとtargetPieceは取れないの？
-            // 有ったら取る、無かったらundefinedを得る　ではダメか？
-            isExistPiece(targetFieldNumber);
-            targetFieldNumber = getNextFieldNumber()) {
-            targetPiece = getPiece(targetFieldNumber)
-            if (!targetPiece) {
-                return false
-            }
-            if (isSameColor(targetPiece, color)) {
+        for (targetPiece = getNextPiece(); targetPiece; targetPiece = getNextPiece()) {
+            if (isSameColor(targetPiece, currentColor)) {
                 return true
             }
         }
@@ -134,89 +122,58 @@
         piece.classList.toggle('black-piece')
     }
 
-    function turnPiecesOnLine(color /** REVIEW: 何の色かが想像できる変数名に直そう */, getNextFieldNumber) {
-        let targetFieldNumber = getNextFieldNumber()
-        let targetPiece = getPiece(targetFieldNumber)
-        while (!isSameColor(targetPiece, color)) {
+    function turnPiecesOnLine(currentColor, getNextPiece) {
+        let targetPiece = getNextPiece()
+        while (!isSameColor(targetPiece, currentColor)) {
             turnPiece(targetPiece)
-            targetFieldNumber = getNextFieldNumber()
-            targetPiece = getPiece(targetFieldNumber)
+            targetPiece = getNextPiece()
         }
     }
 
-    function genNextFieldNumberGetter(initFieldNumber, x, y) {
+    function genNextPieceGetter(initFieldNumber, x, y) {
         let fieldNumber = initFieldNumber
         return () => {
             fieldNumber = {x: fieldNumber.x + x, y: fieldNumber.y + y}
-            return fieldNumber
+            return getPiece(fieldNumber)
         }
     }
 
     function turnPieces(fieldNumber) {
         for (let x = -1; x <= 1; x++) {
             for (let y = -1; y <= 1; y++) {
-                // REVIEW: ぱっと見が分かりづらいから、
-                // ここもx=0, y=0の時を除くようになってた方が分かりやすそう。
-                let getNextFieldNumber = genNextFieldNumberGetter(fieldNumber, x, y)
-                if (hasTurnablePiece(currentColor, getNextFieldNumber)) {
-                    getNextFieldNumber = genNextFieldNumberGetter(fieldNumber, x, y)
-                    turnPiecesOnLine(currentColor, getNextFieldNumber)
+                if (x === 0 && y === 0) continue
+                let getNextPiece = genNextPieceGetter(fieldNumber, x, y)
+                if (hasTurnablePiece(currentColor, getNextPiece)) {
+                    getNextPiece = genNextPieceGetter(fieldNumber, x, y)
+                    turnPiecesOnLine(currentColor, getNextPiece)
                 }
             }
         }
     }
 
-    function changePlayer() {
-        currentColor = currentColor === 'b' ? 'w' : 'b'
-        document.getElementById('current-player').innerHTML = COLOR_KEY[currentColor].text
-    }
-
     BOARD.onclick = (event) => {
         const fieldNumber = getFieldNumber(event)
-        /**
-         * REVIEW: ここのタイミングで、本当に置ける場所をクリックしたかどうかを判定する必要がある。
-         * コード例）:
-         * let piece = undefined
-         * if (canPut(hoge, foo)) {
-         *     piece = putPiece(fieldNumber, currentColor)
-         * }
-         */
-        const piece = putPiece(fieldNumber, currentColor)
+        const piece = isAblePut(fieldNumber) && putPiece(fieldNumber, currentColor)
         if (piece) {
             turnPieces(fieldNumber)
             resetAblePut()
-            changePlayer()
+            currentColor = currentColor === 'b' ? 'w' : 'b'
             addAblePut()
+            viewInfo()
         }
     }
 
     function addAblePut() {
-        /**
-         * x=0, y=0の時は無視するので、
-         * x,yのループが外側の方が効率的では？
-         * コード例）:
-         * for (xのループ) {
-         *     for (yのループ) {
-         *         if (x=0 かつ y=0) continue
-         *
-         *         for (bxのループ) {
-         *             for (byのループ) {
-         *                 // 中身の処理
-         *             }
-         *         }
-         *     }
-         * }
-         */
-        for (let bx = 0; bx < BOARD_SIZE; bx++) {
-            for (let by = 0; by < BOARD_SIZE; by++) {
-                for (let x = -1; x <= 1; x++) {
-                    for (let y = -1; y <= 1; y++) {
-                        if (!(x === 0 && y === 0)) {
-                            let targetFieldNumber = {x: bx, y: by}
-                            let getNextFieldNumber = genNextFieldNumberGetter(targetFieldNumber, x, y)
-                            if (hasTurnablePiece(currentColor, getNextFieldNumber)) {
-                                getField(targetFieldNumber).classList.add('able-put')
-                            }
+         for (let x = -1; x <= 1; x++) {
+            for (let y = -1; y <= 1; y++) {
+                if (x === 0 && y === 0) continue
+                for (let bx = 0; bx < BOARD_SIZE; bx++) {
+                    for (let by = 0; by < BOARD_SIZE; by++) {
+                        let targetFieldNumber = {x: bx, y: by}
+                        if (getPiece(targetFieldNumber)) continue
+                        let getNextPiece = genNextPieceGetter(targetFieldNumber, x, y)
+                        if (hasTurnablePiece(currentColor, getNextPiece)) {
+                            getField(targetFieldNumber).classList.add('able-put')
                         }
                     }
                 }
@@ -229,11 +186,17 @@
             .forEach(elm => {return elm.classList.remove('able-put')})
     }
 
+    function viewInfo() {
+        document.getElementById('current-player').innerHTML = COLOR_KEY[currentColor].text
+        Object.keys(COLOR_KEY).forEach(key => setCountPieces(key))
+    }
+
+    function setCountPieces(countColor) {
+        countNumber = Array.from(document.getElementsByClassName(COLOR_KEY[countColor].class)).length
+        document.getElementById(COLOR_KEY[countColor].count).innerHTML = countNumber
+    }
 
     createBoard()
-    putInitPiece()
-
-
 
 </script>
 

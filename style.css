@@ -18,8 +18,33 @@
     border: solid 1px #000;
 }
 
-#board .able-put/**:hover*/ {
+#board .able-put {
     background-color: lawngreen;
+}
+
+#current-player {
+    font-size: 35px;
+}
+
+#current-player::after {
+    content: ' の番です';
+    font-size: 30px;
+}
+
+#black-count::before {
+    content: '黒：';
+}
+
+#white-count::before {
+    content: '白：';
+}
+
+.piece-count {
+    margin-right: 15px;
+}
+
+.piece-count::after {
+    content: '個';
 }
 
 .black-piece {
