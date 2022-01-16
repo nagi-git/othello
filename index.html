@@ -200,7 +200,7 @@
 
     function viewRecord(fieldNumber, playCount) {
         const field = getPiece(fieldNumber)
-        const piece = document.createElement('div')
+        const piece = document.createElement('span')
         field.appendChild(piece)
         piece.classList.add('record')
         piece.innerHTML = playCount
