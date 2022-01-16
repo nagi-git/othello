@@ -161,7 +161,7 @@
             currentColor = currentColor === 'b' ? 'w' : 'b'
             addAblePut()
             viewInfo()
-            viewRecord(fieldNumber, ++playCount)
+            viewRecord(piece)
         }
     }
 
@@ -198,12 +198,11 @@
         document.getElementById(COLOR_KEY[countColor].count).innerHTML = countNumber
     }
 
-    function viewRecord(fieldNumber, playCount) {
-        const field = getPiece(fieldNumber)
-        const piece = document.createElement('span')
-        field.appendChild(piece)
-        piece.classList.add('record')
-        piece.innerHTML = playCount
+    function viewRecord(piece) {
+        const record = document.createElement('span')
+        piece.appendChild(record)
+        record.classList.add('record')
+        record.innerHTML = ++playCount
     }
 
     createBoard()
