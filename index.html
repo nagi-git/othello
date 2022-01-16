@@ -47,6 +47,7 @@
     const isAblePut = (fieldNumber) => getField(fieldNumber).classList.contains('able-put')
 
     let currentColor = 'b'
+    let playCount = 0
 
     function createBoard() {
         for (let x = 0; x < BOARD_SIZE; x++) {
@@ -160,6 +161,7 @@
             currentColor = currentColor === 'b' ? 'w' : 'b'
             addAblePut()
             viewInfo()
+            viewRecord(fieldNumber, ++playCount)
         }
     }
 
@@ -194,6 +196,14 @@
     function setCountPieces(countColor) {
         countNumber = Array.from(document.getElementsByClassName(COLOR_KEY[countColor].class)).length
         document.getElementById(COLOR_KEY[countColor].count).innerHTML = countNumber
+    }
+
+    function viewRecord(fieldNumber, playCount) {
+        const field = getPiece(fieldNumber)
+        const piece = document.createElement('div')
+        field.appendChild(piece)
+        piece.classList.add('record')
+        piece.innerHTML = playCount
     }
 
     createBoard()
